@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Download, FileJson, ImagePlus, Plus, Trash2 } from 'lucide-react';
+import { Download, FileJson, ImagePlus } from 'lucide-react';
 import type { Character } from '@/types';
 import { useT } from '@/lib/useT';
 import { downloadFile, pickFile, resizeImage, splitList } from '@/lib/utils';
@@ -9,6 +9,7 @@ import { useUi } from '@/store/ui';
 import { Modal } from '@/components/ui/Modal';
 import { Avatar } from '@/components/ui/Avatar';
 import { Field, Select, TextArea, TextInput } from '@/components/ui/Primitives';
+import { OpeningMessages } from './OpeningMessages';
 
 export function CharacterEditor({ id, onClose }: { id: string | 'new'; onClose: () => void }) {
   const t = useT();
@@ -116,7 +117,7 @@ export function CharacterEditor({ id, onClose }: { id: string | 'new'; onClose: 
         {(['core', 'greetings', 'prompts', 'meta'] as const).map((key) => (
           <button key={key} type="button" role="tab" aria-selected={tab === key} onClick={() => setTab(key)}>
             {key === 'core' && t('character.description')}
-            {key === 'greetings' && t('chat.greeting')}
+            {key === 'greetings' && t('greetings.title')}
             {key === 'prompts' && t('settings.tab.prompts')}
             {key === 'meta' && t('common.advanced')}
           </button>
@@ -143,55 +144,12 @@ export function CharacterEditor({ id, onClose }: { id: string | 'new'; onClose: 
 
       {tab === 'greetings' && (
         <>
-          <Field label={t('character.firstMes')}>
-            <TextArea
-              value={draft.firstMes}
-              style={{ minHeight: 150 }}
-              onChange={(event) => patch({ firstMes: event.target.value })}
-            />
-          </Field>
-
-          <Field
-            label={t('character.altGreetings')}
-            action={
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
-                onClick={() => patch({ alternateGreetings: [...draft.alternateGreetings, ''] })}
-              >
-                <Plus size={14} />
-                {t('character.addGreeting')}
-              </button>
+          <OpeningMessages
+            openings={[draft.firstMes, ...draft.alternateGreetings]}
+            onChange={(openings) =>
+              patch({ firstMes: openings[0] ?? '', alternateGreetings: openings.slice(1) })
             }
-          >
-            <div className="stack" style={{ gap: 'var(--space-2)' }}>
-              {draft.alternateGreetings.map((greeting, index) => (
-                <div className="row" key={index} style={{ alignItems: 'flex-start' }}>
-                  <TextArea
-                    value={greeting}
-                    style={{ minHeight: 84 }}
-                    onChange={(event) =>
-                      patch({
-                        alternateGreetings: draft.alternateGreetings.map((item, position) =>
-                          position === index ? event.target.value : item,
-                        ),
-                      })
-                    }
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-icon btn-sm"
-                    onClick={() =>
-                      patch({ alternateGreetings: draft.alternateGreetings.filter((_, position) => position !== index) })
-                    }
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-              ))}
-              {!draft.alternateGreetings.length && <p className="tiny muted">{t('common.empty')}</p>}
-            </div>
-          </Field>
+          />
 
           <Field label={t('character.mesExample')} hint="<START>\n{{user}}: …\n{{char}}: …">
             <TextArea value={draft.mesExample} onChange={(event) => patch({ mesExample: event.target.value })} />

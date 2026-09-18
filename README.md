@@ -26,8 +26,8 @@ provider you configure.
 
 **Characters, personas, lorebooks**
 - Character Card V2 import and export, both as embedded PNG and as JSON
-- Full card editor: description, personality, scenario, greetings, alternate
-  greetings, example dialogue, per-card system prompt and post-history instructions
+- Full card editor: description, personality, scenario, opening messages,
+  example dialogue, per-card system prompt and post-history instructions
 - Personas — who *you* are in the scene — with their own avatars
 - Lorebooks (world info) with primary and secondary keys, AND/NOT logic,
   constant entries, insertion order, position, depth, probability, recursive
@@ -56,6 +56,15 @@ provider you configure.
 - Summarize the recent scene into a note on demand, or automatically every N messages
 - Pin entries so they survive trimming, disable entries without deleting them,
   and watch the memory budget against the context window
+
+**Opening messages**
+- Give a character as many openings as you like and reorder them; the one on top
+  is what a new chat starts with
+- Every opening becomes a swipe on the first message, so you can flip through
+  them in the chat — or open a picker and jump straight to the one you want
+- Each card previews its rendered markdown and shows what it costs in tokens
+- They travel with the card: exported as `first_mes` plus `alternate_greetings`,
+  and read back from any V2 character card
 
 **Your own prompts**
 - Add prompt blocks of your own and switch each one on or off, like SillyTavern's
@@ -234,8 +243,8 @@ SillyTavern: карточки персонажей, персоны, лорбук
   ветки от любого сообщения, несколько чатов на персонажа, заметка автора с
   настраиваемой глубиной вставки.
 - **Карточки:** импорт и экспорт Character Card V2 — и PNG со встроенными
-  данными, и JSON. Полный редактор: описание, характер, сценарий, приветствия,
-  альтернативные приветствия, примеры диалогов, системный промпт карточки.
+  данными, и JSON. Полный редактор: описание, характер, сценарий, начальные
+  сообщения, примеры диалогов, системный промпт карточки.
 - **Персоны:** кто вы внутри сцены, со своими аватарами.
 - **Лорбуки:** основные и дополнительные ключи, логика И/НЕ, постоянные записи,
   порядок и позиция вставки, глубина, вероятность, рекурсивное сканирование,
@@ -253,6 +262,12 @@ SillyTavern: карточки персонажей, персоны, лорбук
 - **Книга памяти:** долговременные заметки в каждом промпте чата, суммаризация
   сцены по кнопке или автоматически каждые N сообщений, закрепление записей,
   бюджет памяти относительно окна контекста.
+- **Начальные сообщения:** у персонажа их может быть сколько угодно, порядок
+  меняется — верхнее открывает новый чат. Каждое становится свайпом первого
+  сообщения, так что в чате между ними можно листать или открыть список и сразу
+  перейти к нужному. У каждой карточки есть предпросмотр разметки и счётчик
+  токенов. Всё уезжает вместе с карточкой: `first_mes` плюс
+  `alternate_greetings`, и читается из любой карточки V2.
 - **Свои промпты:** собственные блоки промпта, каждый со своим тогглом — как
   менеджер промптов в SillyTavern. Пять позиций: внутри системного промпта,
   после персонажа, перед историей, после истории или на заданной глубине.

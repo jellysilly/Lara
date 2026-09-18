@@ -52,6 +52,7 @@ interface ChatState {
   generate(options?: GenerateOptions): Promise<void>;
   stop(): void;
   swipe(messageId: string, direction: 1 | -1): Promise<void>;
+  setSwipe(messageId: string, index: number): void;
   editMessage(messageId: string, text: string): void;
   deleteMessage(messageId: string): void;
   toggleHidden(messageId: string): void;
@@ -432,6 +433,17 @@ export const useChats = create<ChatState>((set, get) => {
       mutate((current) => ({
         ...current,
         messages: current.messages.map((item) => (item.id === messageId ? { ...item, swipeIndex: next } : item)),
+      }));
+    },
+
+    setSwipe(messageId, index) {
+      mutate((chat) => ({
+        ...chat,
+        messages: chat.messages.map((message) =>
+          message.id === messageId
+            ? { ...message, swipeIndex: Math.max(0, Math.min(message.swipes.length - 1, index)) }
+            : message,
+        ),
       }));
     },
 

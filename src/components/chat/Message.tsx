@@ -7,6 +7,7 @@ import {
   Eye,
   EyeOff,
   GitBranch,
+  ListStart,
   Pencil,
   RefreshCcw,
   Trash2,
@@ -22,6 +23,7 @@ import { useChats, messageText } from '@/store/chats';
 import { useLibrary } from '@/store/library';
 import { useUi } from '@/store/ui';
 import { Avatar } from '@/components/ui/Avatar';
+import { Modal } from '@/components/ui/Modal';
 
 interface MessageProps {
   message: MessageModel;
@@ -49,13 +51,14 @@ export const MessageBubble = memo(function MessageBubble({ message, isLast, stre
   const characterId = useChats((state) => state.chat?.characterId);
   const character = useLibrary((state) => state.characters.find((item) => item.id === characterId));
   const generating = useChats((state) => state.generating);
-  const { editMessage, deleteMessage, toggleHidden, swipe, branchFrom, generate } = useChats.getState();
+  const { editMessage, deleteMessage, toggleHidden, swipe, setSwipe, branchFrom, generate } = useChats.getState();
   const toast = useUi((state) => state.toast);
   const askConfirm = useUi((state) => state.askConfirm);
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [revealed, setRevealed] = useState(false);
+  const [pickingOpening, setPickingOpening] = useState(false);
   const editorRef = useRef<HTMLTextAreaElement>(null);
 
   const text = messageText(message);
@@ -72,6 +75,9 @@ export const MessageBubble = memo(function MessageBubble({ message, isLast, stre
       }),
     [text, regexScripts, message.role, depth, characterId, character],
   );
+
+  // An opening message keeps every greeting the card had as a swipe.
+  const openings = message.isGreeting ? message.swipes : [];
 
   const canSwipe = message.role === 'assistant' && (message.swipes.length > 1 || (isLast && !message.isGreeting));
 
@@ -181,7 +187,10 @@ export const MessageBubble = memo(function MessageBubble({ message, isLast, stre
                   type="button"
                   className="msg-tool"
                   onClick={() => swipe(message.id, 1)}
-                  disabled={generating || (message.swipeIndex === message.swipes.length - 1 && !isLast)}
+                  disabled={
+                    generating ||
+                    (message.swipeIndex === message.swipes.length - 1 && (!isLast || Boolean(message.isGreeting)))
+                  }
                   aria-label={t('chat.swipeRight')}
                 >
                   <ChevronRight size={15} />
@@ -204,6 +213,17 @@ export const MessageBubble = memo(function MessageBubble({ message, isLast, stre
                 aria-label={t('common.regenerate')}
               >
                 <RefreshCcw size={15} />
+              </button>
+            )}
+            {openings.length > 1 && (
+              <button
+                type="button"
+                className="msg-tool"
+                onClick={() => setPickingOpening(true)}
+                aria-label={t('greetings.choose')}
+                title={t('greetings.choose')}
+              >
+                <ListStart size={15} />
               </button>
             )}
             <button
@@ -237,6 +257,37 @@ export const MessageBubble = memo(function MessageBubble({ message, isLast, stre
           </div>
         )}
       </div>
+
+      {pickingOpening && (
+        <Modal open title={t('greetings.choose')} onClose={() => setPickingOpening(false)}>
+          <p className="tiny muted">{t('greetings.chooseHint')}</p>
+          <div className="stack" style={{ gap: 'var(--space-2)' }}>
+            {openings.map((opening, index) => (
+              <button
+                key={index}
+                type="button"
+                className="opening-option"
+                data-active={index === message.swipeIndex}
+                onClick={() => {
+                  setSwipe(message.id, index);
+                  setPickingOpening(false);
+                }}
+              >
+                <span className="row" style={{ gap: 6 }}>
+                  <span className="chip tiny">{t('greetings.nth', { n: index + 1 })}</span>
+                  {index === message.swipeIndex && (
+                    <span className="chip tiny chip-accent">{t('greetings.current')}</span>
+                  )}
+                </span>
+                <span
+                  className="msg-content"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(opening || '—') }}
+                />
+              </button>
+            ))}
+          </div>
+        </Modal>
+      )}
     </article>
   );
 });

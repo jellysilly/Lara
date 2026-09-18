@@ -587,6 +587,12 @@
   gap: var(--space-4);
 }
 
+/* A scrolling flex column must not squeeze its children — the tab strip has no
+   intrinsic floor and collapsed to nothing. */
+.modal-body > * {
+  flex: none;
+}
+
 .modal-foot {
   display: flex;
   align-items: center;
@@ -1002,4 +1008,65 @@ button:hover > .avatar-edit {
 
 .collapsible[data-off='true'] > summary {
   opacity: 0.55;
+}
+
+/* ----------------------------------------------------- opening messages --- */
+
+.opening-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.opening-card > header {
+  gap: 4px;
+}
+
+.opening-preview {
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--char-bubble);
+  min-height: 110px;
+  font-size: 0.94rem;
+}
+
+.opening-option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  text-align: left;
+  width: 100%;
+  transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.opening-option:hover {
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+
+.opening-option:active {
+  transform: scale(0.995);
+}
+
+.opening-option[data-active='true'] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.opening-option .msg-content {
+  font-size: 0.92rem;
+  max-height: 180px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
 }
