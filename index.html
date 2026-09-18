@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en" data-theme="lagoon" data-mode="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"
+    />
+    <meta name="theme-color" content="#eef7fb" />
+    <meta name="description" content="Lara — an ocean-themed, local-first roleplay frontend." />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/png" href="/src/assets/logo.png" />
+    <link rel="apple-touch-icon" href="/src/assets/logo.png" />
+    <title>Lara</title>
+    <style>
+      /* Paint the gradient before the bundle lands so there is no white flash. */
+      html { background: #eef7fb; }
+      html[data-mode='dark'] { background: #06161f; }
+      #root { min-height: 100dvh; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

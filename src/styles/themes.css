@@ -1,0 +1,300 @@
+/* ---------------------------------------------------------------------------
+   Three ocean palettes, each with a light and a deep-water variant.
+   Tokens are theme-agnostic so every component reads the same names.
+--------------------------------------------------------------------------- */
+
+:root {
+  --sheet-blur: 18px;
+  --shadow-sm: 0 1px 2px rgb(12 40 60 / 0.06), 0 2px 8px rgb(12 40 60 / 0.05);
+  --shadow-md: 0 4px 12px rgb(12 40 60 / 0.08), 0 14px 34px rgb(12 40 60 / 0.09);
+  --shadow-lg: 0 10px 24px rgb(12 40 60 / 0.12), 0 30px 70px rgb(12 40 60 / 0.16);
+}
+
+[data-blur='off'] {
+  --sheet-blur: 0px;
+}
+
+/* ---------------------------------------------- Lagoon (default, blue) --- */
+
+[data-theme='lagoon'] {
+  --brand-hue: 197;
+  --avatar-sat: 72%;
+  --brand-1: #6dd3f7;
+  --brand-2: #7ab4f9;
+  --brand-3: #bbebfb;
+  --brand-4: #e6f4f4;
+}
+
+[data-theme='lagoon'][data-mode='light'] {
+  --avatar-lum: 80%;
+  --bg: #eef7fb;
+  --bg-gradient:
+    radial-gradient(95% 70% at 2% -8%, #5a9df8 0%, rgb(90 157 248 / 0) 62%),
+    radial-gradient(90% 70% at 100% 2%, #e6f4f4 0%, rgb(230 244 244 / 0) 58%),
+    linear-gradient(166deg, #6dd3f7 0%, #8fd8f9 26%, #bbebfb 55%, #e2f5fa 82%, #f2fbfd 100%);
+  --surface: rgb(255 255 255 / 0.78);
+  --surface-solid: #ffffff;
+  --surface-2: rgb(255 255 255 / 0.55);
+  --surface-3: rgb(255 255 255 / 0.34);
+  --surface-sunken: rgb(18 62 92 / 0.05);
+  --border: rgb(18 62 92 / 0.1);
+  --border-strong: rgb(18 62 92 / 0.2);
+  --text: #103349;
+  --text-dim: #4d7590;
+  --accent: #6dd3f7;
+  --accent-ink: #1b7fb8;
+  --accent-soft: rgb(109 211 247 / 0.2);
+  --accent-contrast: #05293e;
+  --user-bubble: linear-gradient(140deg, #7ab4f9 0%, #6dd3f7 100%);
+  --user-bubble-text: #052f45;
+  --char-bubble: rgb(255 255 255 / 0.9);
+  --wave-1: rgb(109 211 247 / 0.42);
+  --wave-2: rgb(122 180 249 / 0.3);
+  --wave-3: rgb(187 235 251 / 0.5);
+  --danger: #d8555f;
+  --success: #17936f;
+}
+
+[data-theme='lagoon'][data-mode='dark'] {
+  --avatar-lum: 38%;
+  --bg: #06161f;
+  --bg-gradient:
+    radial-gradient(120% 90% at 10% -12%, #10425f 0%, rgb(16 66 95 / 0) 60%),
+    radial-gradient(100% 80% at 92% 0%, #0d3448 0%, rgb(13 52 72 / 0) 58%),
+    linear-gradient(170deg, #0a2433 0%, #071a26 52%, #05131b 100%);
+  --surface: rgb(160 220 250 / 0.08);
+  --surface-solid: #0d2130;
+  --surface-2: rgb(160 220 250 / 0.06);
+  --surface-3: rgb(160 220 250 / 0.04);
+  --surface-sunken: rgb(0 0 0 / 0.24);
+  --border: rgb(160 220 250 / 0.14);
+  --border-strong: rgb(160 220 250 / 0.26);
+  --text: #dceef8;
+  --text-dim: #8cacc0;
+  --accent: #6dd3f7;
+  --accent-ink: #7fd9f9;
+  --accent-soft: rgb(109 211 247 / 0.16);
+  --accent-contrast: #04222f;
+  --user-bubble: linear-gradient(140deg, #2a6d99 0%, #1d5678 100%);
+  --user-bubble-text: #e8f7ff;
+  --char-bubble: rgb(160 220 250 / 0.09);
+  --wave-1: rgb(109 211 247 / 0.16);
+  --wave-2: rgb(122 180 249 / 0.12);
+  --wave-3: rgb(30 90 125 / 0.4);
+  --danger: #f08a92;
+  --success: #57d0aa;
+}
+
+/* ------------------------------------------- Seafoam (green + sunlight) --- */
+
+[data-theme='seafoam'] {
+  --brand-hue: 84;
+  --avatar-sat: 55%;
+  --brand-1: #e1f492;
+  --brand-2: #f9e280;
+  --brand-3: #f8f9d7;
+  --brand-4: #91ad6c;
+}
+
+[data-theme='seafoam'][data-mode='light'] {
+  --avatar-lum: 76%;
+  --bg: #f4f8e4;
+  --bg-gradient:
+    radial-gradient(95% 72% at 0% -8%, #7fa155 0%, rgb(127 161 85 / 0) 60%),
+    radial-gradient(90% 70% at 100% 4%, #f9e280 0%, rgb(249 226 128 / 0) 56%),
+    linear-gradient(160deg, #b9e07f 0%, #d9f08d 30%, #eaf7b4 58%, #f8f9d7 82%, #fdfdf0 100%);
+  --surface: rgb(255 255 255 / 0.76);
+  --surface-solid: #ffffff;
+  --surface-2: rgb(255 255 255 / 0.54);
+  --surface-3: rgb(255 255 255 / 0.32);
+  --surface-sunken: rgb(60 75 40 / 0.05);
+  --border: rgb(60 75 40 / 0.11);
+  --border-strong: rgb(60 75 40 / 0.22);
+  --text: #2e3a20;
+  --text-dim: #63734b;
+  --accent: #91ad6c;
+  --accent-ink: #5d7a3c;
+  --accent-soft: rgb(145 173 108 / 0.22);
+  --accent-contrast: #1d2711;
+  --user-bubble: linear-gradient(140deg, #cfe58f 0%, #f4e492 100%);
+  --user-bubble-text: #2b3818;
+  --char-bubble: rgb(255 255 255 / 0.9);
+  --wave-1: rgb(145 173 108 / 0.36);
+  --wave-2: rgb(225 244 146 / 0.5);
+  --wave-3: rgb(249 226 128 / 0.42);
+  --danger: #c9584f;
+  --success: #3f8b5c;
+}
+
+[data-theme='seafoam'][data-mode='dark'] {
+  --avatar-lum: 32%;
+  --bg: #0d1408;
+  --bg-gradient:
+    radial-gradient(120% 90% at 8% -12%, #2c3d1c 0%, rgb(44 61 28 / 0) 58%),
+    radial-gradient(100% 80% at 94% 2%, #3b3a17 0%, rgb(59 58 23 / 0) 56%),
+    linear-gradient(170deg, #17220e 0%, #111a0a 54%, #0b1206 100%);
+  --surface: rgb(216 240 160 / 0.08);
+  --surface-solid: #16200e;
+  --surface-2: rgb(216 240 160 / 0.06);
+  --surface-3: rgb(216 240 160 / 0.04);
+  --surface-sunken: rgb(0 0 0 / 0.26);
+  --border: rgb(216 240 160 / 0.14);
+  --border-strong: rgb(216 240 160 / 0.26);
+  --text: #e7f2cf;
+  --text-dim: #9fae84;
+  --accent: #c2dd84;
+  --accent-ink: #cfe793;
+  --accent-soft: rgb(194 221 132 / 0.16);
+  --accent-contrast: #1a230e;
+  --user-bubble: linear-gradient(140deg, #4f6a30 0%, #6b7a2c 100%);
+  --user-bubble-text: #f2f8dd;
+  --char-bubble: rgb(216 240 160 / 0.09);
+  --wave-1: rgb(145 173 108 / 0.18);
+  --wave-2: rgb(225 244 146 / 0.12);
+  --wave-3: rgb(70 88 40 / 0.4);
+  --danger: #ef8f86;
+  --success: #74cf94;
+}
+
+/* ------------------------------------------------ Coral (warm shallows) --- */
+
+[data-theme='coral'] {
+  --brand-hue: 2;
+  --avatar-sat: 85%;
+  --brand-1: #f98787;
+  --brand-2: #fce7e3;
+  --brand-3: #fffef3;
+  --brand-4: #fcf8d2;
+}
+
+[data-theme='coral'][data-mode='light'] {
+  --avatar-lum: 84%;
+  --bg: #fff4f0;
+  --bg-gradient:
+    radial-gradient(95% 72% at 2% -8%, #f76d73 0%, rgb(247 109 115 / 0) 60%),
+    radial-gradient(90% 70% at 100% 4%, #fcf8d2 0%, rgb(252 248 210 / 0) 56%),
+    linear-gradient(162deg, #fa9b95 0%, #fcc0b6 28%, #fce7e3 56%, #fff6e8 84%, #fffef3 100%);
+  --surface: rgb(255 255 255 / 0.8);
+  --surface-solid: #ffffff;
+  --surface-2: rgb(255 255 255 / 0.58);
+  --surface-3: rgb(255 255 255 / 0.36);
+  --surface-sunken: rgb(90 43 43 / 0.05);
+  --border: rgb(90 43 43 / 0.1);
+  --border-strong: rgb(90 43 43 / 0.2);
+  --text: #542a2a;
+  --text-dim: #8d6360;
+  --accent: #f98787;
+  --accent-ink: #cf5a5f;
+  --accent-soft: rgb(249 135 135 / 0.2);
+  --accent-contrast: #3a1717;
+  --user-bubble: linear-gradient(140deg, #fba1a1 0%, #fcd9a8 100%);
+  --user-bubble-text: #4b2020;
+  --char-bubble: rgb(255 255 255 / 0.92);
+  --wave-1: rgb(249 135 135 / 0.34);
+  --wave-2: rgb(252 231 227 / 0.6);
+  --wave-3: rgb(252 248 210 / 0.5);
+  --danger: #cf4c56;
+  --success: #2c9273;
+}
+
+[data-theme='coral'][data-mode='dark'] {
+  --avatar-lum: 38%;
+  --bg: #170b0b;
+  --bg-gradient:
+    radial-gradient(120% 90% at 8% -12%, #4a1f22 0%, rgb(74 31 34 / 0) 58%),
+    radial-gradient(100% 80% at 94% 2%, #43331a 0%, rgb(67 51 26 / 0) 56%),
+    linear-gradient(170deg, #26100f 0%, #1b0c0c 54%, #130808 100%);
+  --surface: rgb(255 200 190 / 0.08);
+  --surface-solid: #251313;
+  --surface-2: rgb(255 200 190 / 0.06);
+  --surface-3: rgb(255 200 190 / 0.04);
+  --surface-sunken: rgb(0 0 0 / 0.26);
+  --border: rgb(255 200 190 / 0.14);
+  --border-strong: rgb(255 200 190 / 0.26);
+  --text: #f6e2dd;
+  --text-dim: #b99691;
+  --accent: #f98787;
+  --accent-ink: #fb9b9b;
+  --accent-soft: rgb(249 135 135 / 0.16);
+  --accent-contrast: #2a1010;
+  --user-bubble: linear-gradient(140deg, #8f4040 0%, #8a5b2c 100%);
+  --user-bubble-text: #ffeee9;
+  --char-bubble: rgb(255 200 190 / 0.09);
+  --wave-1: rgb(249 135 135 / 0.16);
+  --wave-2: rgb(252 231 227 / 0.1);
+  --wave-3: rgb(110 50 48 / 0.4);
+  --danger: #f2868f;
+  --success: #62cfa8;
+}
+
+/* ------------------------------------------------------- Ambient ocean --- */
+
+.ocean {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+}
+
+.ocean::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  background-image: radial-gradient(circle at 50% 50%, rgb(255 255 255 / 0.5) 0.5px, transparent 0.6px);
+  background-size: 7px 7px;
+  mix-blend-mode: soft-light;
+}
+
+.ocean-waves {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42vh;
+  min-height: 260px;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  mask-image: linear-gradient(to top, #000 30%, transparent 100%);
+}
+
+.ocean-waves span {
+  position: absolute;
+  bottom: -24px;
+  left: 0;
+  width: 200%;
+  height: 170px;
+  background-color: var(--wave-1);
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  -webkit-mask-size: 50% 100%;
+  mask-size: 50% 100%;
+  -webkit-mask-position: bottom;
+  mask-position: bottom;
+  animation: drift 26s linear infinite;
+  will-change: transform;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 190' preserveAspectRatio='none'%3E%3Cpath d='M0 96c150-54 300-54 450 0s300 54 450 0 300-54 300 0v94H0Z' fill='%23000'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 190' preserveAspectRatio='none'%3E%3Cpath d='M0 96c150-54 300-54 450 0s300 54 450 0 300-54 300 0v94H0Z' fill='%23000'/%3E%3C/svg%3E");
+}
+
+.ocean-waves span:nth-child(2) {
+  height: 140px;
+  bottom: -14px;
+  background-color: var(--wave-2);
+  animation-duration: 38s;
+  animation-direction: reverse;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 150' preserveAspectRatio='none'%3E%3Cpath d='M0 70c160 60 340 60 500 8s340-52 500 14 200 4 200 4v54H0Z' fill='%23000'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 150' preserveAspectRatio='none'%3E%3Cpath d='M0 70c160 60 340 60 500 8s340-52 500 14 200 4 200 4v54H0Z' fill='%23000'/%3E%3C/svg%3E");
+}
+
+.ocean-waves span:nth-child(3) {
+  height: 110px;
+  bottom: -8px;
+  background-color: var(--wave-3);
+  animation-duration: 52s;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0 48c200 44 360-24 600 0s400 60 600 12v60H0Z' fill='%23000'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0 48c200 44 360-24 600 0s400 60 600 12v60H0Z' fill='%23000'/%3E%3C/svg%3E");
+}
