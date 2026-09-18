@@ -1,5 +1,5 @@
-import type { ReactNode, TextareaHTMLAttributes, InputHTMLAttributes, SelectHTMLAttributes } from 'react';
-import { cn } from '@/lib/utils';
+import { useRef, useState, type ReactNode, type TextareaHTMLAttributes, type InputHTMLAttributes, type SelectHTMLAttributes } from 'react';
+import { clamp, cn } from '@/lib/utils';
 
 export function Field({
   label,
@@ -69,8 +69,10 @@ export function Slider({
   max,
   step = 1,
   onChange,
-  format,
   hint,
+  unit,
+  precision = 0,
+  maxInput,
 }: {
   label: ReactNode;
   value: number;
@@ -78,9 +80,29 @@ export function Slider({
   max: number;
   step?: number;
   onChange: (value: number) => void;
-  format?: (value: number) => string;
   hint?: ReactNode;
+  /** Shown after the number, e.g. px or %. */
+  unit?: string;
+  /** Decimal places for the readout. */
+  precision?: number;
+  /** Ceiling for typed values, when the track has to stop short of it. */
+  maxInput?: number;
 }) {
+  // The box is text, not <input type="number">: browsers report an empty value
+  // for half-typed decimals like "0." and that fights a controlled input.
+  const [draft, setDraft] = useState<string | null>(null);
+  // Escape blurs the box, and blur normally commits — this skips that one time.
+  const cancelled = useRef(false);
+  const shown = draft ?? (precision ? value.toFixed(precision) : String(value));
+
+  const commit = (raw: string) => {
+    setDraft(null);
+    const parsed = Number(raw.replace(',', '.').trim());
+    if (!raw.trim() || !Number.isFinite(parsed)) return;
+    const next = clamp(parsed, min, maxInput ?? max);
+    if (next !== value) onChange(next);
+  };
+
   return (
     <div className="field">
       <span className="field-label">{label}</span>
@@ -92,9 +114,51 @@ export function Slider({
           max={max}
           step={step}
           value={value}
-          onChange={(event) => onChange(Number(event.target.value))}
+          onChange={(event) => {
+            setDraft(null);
+            onChange(Number(event.target.value));
+          }}
+          aria-hidden
+          tabIndex={-1}
         />
-        <span className="slider-value">{format ? format(value) : value}</span>
+        <span className="slider-entry">
+          <input
+            className="slider-number"
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
+            spellCheck={false}
+            value={shown}
+            size={Math.max(3, shown.length)}
+            aria-label={typeof label === 'string' ? label : undefined}
+            onChange={(event) => setDraft(event.target.value.replace(/[^0-9.,-]/g, ''))}
+            onFocus={(event) => event.target.select()}
+            onBlur={(event) => {
+              if (cancelled.current) {
+                cancelled.current = false;
+                setDraft(null);
+                return;
+              }
+              commit(event.target.value);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                event.currentTarget.blur();
+              } else if (event.key === 'Escape') {
+                cancelled.current = true;
+                setDraft(null);
+                event.currentTarget.blur();
+              } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                event.preventDefault();
+                const delta = event.key === 'ArrowUp' ? step : -step;
+                setDraft(null);
+                onChange(clamp(Number((value + delta).toFixed(6)), min, max));
+              }
+            }}
+          />
+          {unit && <span className="slider-unit">{unit}</span>}
+        </span>
       </div>
       {hint && <span className="field-hint">{hint}</span>}
     </div>

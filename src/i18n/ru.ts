@@ -310,6 +310,18 @@ export const ru: Record<TranslationKey, string> & Record<string, string> = {
   'settings.gen.frequencyPenalty': 'Штраф за частоту',
   'settings.gen.stop': 'Стоп-последовательности',
   'settings.gen.streaming': 'Потоковая выдача',
+  'settings.gen.import': 'Импорт пресета',
+  'settings.gen.export': 'Экспорт пресета',
+  'settings.gen.importHint':
+    'Принимаются пресеты SillyTavern — и Chat Completion, и Text Completion, — а также собственный экспорт Lara.',
+  'settings.gen.imported': 'Импортирован «{name}»',
+  'settings.gen.applyPrompts':
+    'В пресете есть тексты промптов (системный, после истории, «ответить за меня»). Заменить ими ваши текущие промпты?',
+  'settings.gen.unsupported': 'Пропущено, нет аналога: {list}',
+  'settings.gen.instructPreset':
+    'Это instruct-шаблон. Lara работает с chat-completion и собирает форматирование сама, так что применять нечего.',
+  'settings.gen.contextTemplate': 'Это шаблон контекста, а не пресет генерации.',
+  'settings.gen.unreadable': 'Lara не может прочитать этот файл как пресет.',
 
   'settings.prompt.system': 'Основной системный промпт',
   'settings.prompt.postHistory': 'Инструкции после истории',

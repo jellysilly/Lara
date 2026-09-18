@@ -95,7 +95,7 @@ function EntryCard({
                 max={100}
                 value={entry.probability}
                 onChange={(probability) => patch({ probability })}
-                format={(value) => `${value}%`}
+                unit="%"
               />
             </div>
             {entry.position === 'at_depth' && (

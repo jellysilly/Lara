@@ -14,6 +14,7 @@ import type { ApiProfile, GenerationPreset, Language, Provider } from '@/types';
 import { useT } from '@/lib/useT';
 import { downloadFile, pickFile, readAsText, splitList, formatBytes } from '@/lib/utils';
 import { fetchModels, complete, ApiError } from '@/lib/api';
+import { PresetFormatError, parsePresetFile, serializePreset, type ImportedPreset } from '@/lib/presetImport';
 import { db } from '@/lib/db';
 import { resetCalibration } from '@/lib/tokenizer';
 import {
@@ -177,10 +178,10 @@ function ConnectionTab() {
                   label={t('settings.api.contextSize')}
                   min={2048}
                   max={262144}
+                  maxInput={4_194_304}
                   step={1024}
                   value={profile.contextSize}
                   onChange={(contextSize) => update({ contextSize })}
-                  format={(value) => `${Math.round(value / 1024)}k`}
                 />
 
                 <div className="row-wrap">
@@ -223,10 +224,10 @@ function ConnectionTab() {
           label={t('tokens.allowance')}
           min={0}
           max={5_000_000}
+          maxInput={1_000_000_000}
           step={50_000}
           value={tokenAllowance}
           onChange={(tokenAllowance) => patch({ tokenAllowance })}
-          format={(value) => (value ? `${Math.round(value / 1000)}k` : '—')}
           hint={t('tokens.allowanceHint')}
         />
         <button
@@ -251,15 +252,73 @@ function GenerationTab() {
   const settings = useSettings();
   const upsertPreset = useSettings((state) => state.upsertPreset);
   const removePreset = useSettings((state) => state.removePreset);
+  const patchPrompt = useSettings((state) => state.patchPrompt);
   const patch = useSettings((state) => state.patch);
+  const toast = useUi((state) => state.toast);
+  const askConfirm = useUi((state) => state.askConfirm);
   const preset = activePreset(settings);
   const update = (value: Partial<GenerationPreset>) => upsertPreset({ ...preset, ...value });
+
+  const importPreset = async () => {
+    const file = await pickFile('.json,.settings,application/json');
+    if (!file) return;
+
+    let imported: ImportedPreset;
+    try {
+      imported = parsePresetFile(await readAsText(file), file.name.replace(/\.(json|settings)$/i, ''));
+    } catch (error) {
+      const code = error instanceof PresetFormatError ? error.code : 'unreadable';
+      const key =
+        code === 'instruct'
+          ? 'settings.gen.instructPreset'
+          : code === 'context'
+            ? 'settings.gen.contextTemplate'
+            : 'settings.gen.unreadable';
+      toast(t(key), 'error');
+      return;
+    }
+
+    upsertPreset(imported.preset);
+    patch({ activePresetId: imported.preset.id });
+    toast(t('settings.gen.imported', { name: imported.preset.name }), 'success');
+
+    const promptFields = Object.keys(imported.prompt).filter(
+      (key) => key !== 'contextSize' && key !== 'responseTokens',
+    );
+    if (promptFields.length && (await askConfirm(t('settings.gen.applyPrompts')))) {
+      patchPrompt(imported.prompt);
+    } else if (imported.prompt.contextSize || imported.prompt.responseTokens) {
+      // Sizes are settings, not writing — they come along either way.
+      patchPrompt({
+        ...(imported.prompt.contextSize ? { contextSize: imported.prompt.contextSize } : {}),
+        ...(imported.prompt.responseTokens ? { responseTokens: imported.prompt.responseTokens } : {}),
+      });
+    }
+
+    if (imported.unsupported.length) {
+      toast(t('settings.gen.unsupported', { list: imported.unsupported.join(', ') }), 'info');
+    }
+  };
 
   return (
     <Section
       title={t('settings.gen.presets')}
       action={
         <div className="row">
+          <button type="button" className="btn btn-sm" onClick={() => void importPreset()} title={t('settings.gen.import')}>
+            <Upload size={15} />
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm"
+            title={t('settings.gen.export')}
+            onClick={() => {
+              downloadFile(serializePreset(preset), `${preset.name || 'preset'}.json`);
+              toast(t('toast.exported'), 'success');
+            }}
+          >
+            <Download size={15} />
+          </button>
           <button type="button" className="btn btn-sm" onClick={() => upsertPreset(createPreset(`Preset ${settings.presets.length + 1}`))}>
             <Plus size={15} />
           </button>
@@ -293,7 +352,7 @@ function GenerationTab() {
         step={0.05}
         value={preset.temperature}
         onChange={(temperature) => update({ temperature })}
-        format={(value) => value.toFixed(2)}
+        precision={2}
       />
       <Slider
         label={t('settings.gen.topP')}
@@ -302,7 +361,7 @@ function GenerationTab() {
         step={0.01}
         value={preset.topP}
         onChange={(topP) => update({ topP })}
-        format={(value) => value.toFixed(2)}
+        precision={2}
       />
       <Slider
         label={t('settings.gen.topK')}
@@ -310,12 +369,12 @@ function GenerationTab() {
         max={200}
         value={preset.topK}
         onChange={(topK) => update({ topK })}
-        format={(value) => (value ? String(value) : '—')}
       />
       <Slider
         label={t('settings.gen.maxTokens')}
         min={64}
         max={4096}
+        maxInput={131_072}
         step={32}
         value={preset.maxTokens}
         onChange={(maxTokens) => update({ maxTokens })}
@@ -328,7 +387,7 @@ function GenerationTab() {
           step={0.05}
           value={preset.presencePenalty}
           onChange={(presencePenalty) => update({ presencePenalty })}
-          format={(value) => value.toFixed(2)}
+          precision={2}
         />
         <Slider
           label={t('settings.gen.frequencyPenalty')}
@@ -337,7 +396,7 @@ function GenerationTab() {
           step={0.05}
           value={preset.frequencyPenalty}
           onChange={(frequencyPenalty) => update({ frequencyPenalty })}
-          format={(value) => value.toFixed(2)}
+          precision={2}
         />
       </div>
 
@@ -350,6 +409,8 @@ function GenerationTab() {
         onChange={(streaming) => update({ streaming })}
         label={t('settings.gen.streaming')}
       />
+
+      <p className="tiny muted">{t('settings.gen.importHint')}</p>
     </Section>
   );
 }
@@ -440,15 +501,16 @@ function PromptsTab() {
           label={t('settings.prompt.contextSize')}
           min={1024}
           max={262144}
+          maxInput={4_194_304}
           step={1024}
           value={prompt.contextSize}
           onChange={(contextSize) => patchPrompt({ contextSize })}
-          format={(value) => `${Math.round(value / 1024)}k`}
         />
         <Slider
           label={t('settings.prompt.responseTokens')}
           min={64}
           max={4096}
+          maxInput={131_072}
           step={32}
           value={prompt.responseTokens}
           onChange={(responseTokens) => patchPrompt({ responseTokens })}

@@ -57,6 +57,22 @@ provider you configure.
 - Pin entries so they survive trimming, disable entries without deleting them,
   and watch the memory budget against the context window
 
+**Presets**
+- Sampler presets (temperature, top-p/top-k, penalties, response length, stop
+  sequences, streaming) with as many profiles as you like
+- Imports SillyTavern presets — both Chat Completion and Text Completion. Chat
+  presets bring their prompt blocks across too: the main prompt and any enabled
+  custom blocks become the system prompt, in the order the preset lists them,
+  and the post-history block lands where it belongs. Applying that text is
+  always a separate yes/no, so an import never quietly overwrites your prompts.
+- Instruct and context templates are recognised and rejected with an
+  explanation rather than a silent no-op — Lara speaks to chat-completion
+  endpoints and builds its own formatting
+- Samplers with no equivalent here (min_p, repetition penalty, mirostat, DRY…)
+  are named in a toast instead of being dropped in silence
+- Exports carry both Lara's field names and SillyTavern's, so a preset written
+  here reads back there
+
 **Regex scripts**
 - Find-and-replace rules that run over messages, with `/pattern/flags` or a bare pattern
 - Three independent stages: what **you read**, what the **model reads**, and what
@@ -75,6 +91,8 @@ provider you configure.
 - Two chat styles: **flat** and **bubble**
 - Three avatar modes: **messenger** (sides), **above the message**, and **none**,
   with adjustable size and shape
+- Every slider is also a text box: click the number and type an exact value,
+  including values past the end of the track (a 400k context, say)
 - Text size, chat width, message spacing, serif prose, glass blur and ambient
   waves are all adjustable; animations can be switched off entirely and
   `prefers-reduced-motion` is honoured
@@ -166,8 +184,8 @@ clears IndexedDB and reloads.
 ```
 src/
   lib/          prompt builder, lorebook engine, regex engine, tokenizer,
-                API clients, character-card PNG codec, wiki fetcher,
-                generator, markdown
+                API clients, character-card PNG codec, preset importer,
+                wiki fetcher, generator, markdown
   store/        zustand stores: settings, library, chats, ui
   components/   layout, chat, characters, personas, lorebook, memory,
                 generator, settings, ui primitives
@@ -221,6 +239,17 @@ SillyTavern: карточки персонажей, персоны, лорбук
 - **Книга памяти:** долговременные заметки в каждом промпте чата, суммаризация
   сцены по кнопке или автоматически каждые N сообщений, закрепление записей,
   бюджет памяти относительно окна контекста.
+- **Пресеты:** наборы сэмплеров (температура, top-p/top-k, штрафы, длина ответа,
+  стоп-последовательности, стриминг) — сколько угодно профилей. Импортируются
+  пресеты SillyTavern, и Chat Completion, и Text Completion. Chat-пресеты
+  переносят и свои промпт-блоки: основной промпт и включённые пользовательские
+  блоки собираются в системный промпт в том порядке, в каком они перечислены,
+  а блок после истории встаёт на своё место. Применение этих текстов всегда
+  отдельный вопрос «да/нет» — импорт никогда молча не затрёт ваши промпты.
+  Instruct-шаблоны и шаблоны контекста распознаются и честно отклоняются с
+  пояснением. Сэмплеры без аналога (min_p, repetition penalty, mirostat, DRY…)
+  перечисляются в уведомлении, а не пропадают молча. Экспорт пишет и поля Lara,
+  и поля SillyTavern, так что пресет отсюда читается и там.
 - **Регексы:** правила поиска и замены по сообщениям — `/шаблон/флаги` или
   просто шаблон. Три независимых этапа: что **видите вы**, что **видит модель**
   и что **сохраняется**, так что блок размышлений можно спрятать из чата, не

@@ -302,6 +302,18 @@ export const en = {
   'settings.gen.frequencyPenalty': 'Frequency penalty',
   'settings.gen.stop': 'Stop sequences',
   'settings.gen.streaming': 'Stream responses',
+  'settings.gen.import': 'Import preset',
+  'settings.gen.export': 'Export preset',
+  'settings.gen.importHint':
+    'SillyTavern chat-completion and text-completion presets are both accepted, alongside Lara\u2019s own export.',
+  'settings.gen.imported': 'Imported “{name}”',
+  'settings.gen.applyPrompts':
+    'This preset also carries prompt text (system prompt, post-history, impersonation). Replace your current prompts with it?',
+  'settings.gen.unsupported': 'Ignored, no equivalent here: {list}',
+  'settings.gen.instructPreset':
+    'That is an instruct template. Lara talks to chat-completion endpoints and builds its own formatting, so there is nothing to apply.',
+  'settings.gen.contextTemplate': 'That is a context template, not a generation preset.',
+  'settings.gen.unreadable': 'That file is not a preset Lara can read.',
 
   'settings.prompt.system': 'Main system prompt',
   'settings.prompt.postHistory': 'Post-history instructions',

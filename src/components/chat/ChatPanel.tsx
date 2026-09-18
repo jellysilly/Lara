@@ -250,7 +250,7 @@ export function ChatPanel() {
                   max={84}
                   value={appearance.avatarSize}
                   onChange={(avatarSize) => patchAppearance({ avatarSize })}
-                  format={(value) => `${value}px`}
+                  unit="px"
                 />
               )}
               <Field label={t('common.more')}>

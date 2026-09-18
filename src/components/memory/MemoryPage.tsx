@@ -91,7 +91,7 @@ export function MemoryPage() {
               max={40}
               value={Math.round(promptSettings.memoryBudget * 100)}
               onChange={(value) => patchPrompt({ memoryBudget: value / 100 })}
-              format={(value) => `${value}%`}
+              unit="%"
               hint={t('memory.budgetHint')}
             />
             <Switch

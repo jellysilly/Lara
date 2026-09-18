@@ -124,7 +124,7 @@ export function AppearanceSettings() {
               max={96}
               value={appearance.avatarSize}
               onChange={(avatarSize) => patchAppearance({ avatarSize })}
-              format={(value) => `${value}px`}
+              unit="px"
             />
             <Segmented
               label={t('settings.appearance.avatarShape')}
@@ -147,7 +147,7 @@ export function AppearanceSettings() {
           max={22}
           value={appearance.fontSize}
           onChange={(fontSize) => patchAppearance({ fontSize })}
-          format={(value) => `${value}px`}
+          unit="px"
         />
         <Slider
           label={t('settings.appearance.chatWidth')}
@@ -156,7 +156,7 @@ export function AppearanceSettings() {
           step={20}
           value={appearance.chatWidth}
           onChange={(chatWidth) => patchAppearance({ chatWidth })}
-          format={(value) => `${value}px`}
+          unit="px"
         />
         <Slider
           label={t('settings.appearance.messageGap')}
@@ -164,7 +164,7 @@ export function AppearanceSettings() {
           max={40}
           value={appearance.messageGap}
           onChange={(messageGap) => patchAppearance({ messageGap })}
-          format={(value) => `${value}px`}
+          unit="px"
         />
         <Switch
           checked={appearance.serifBody}
