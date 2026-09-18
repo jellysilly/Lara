@@ -6,6 +6,7 @@ import {
   MessagesSquare,
   Moon,
   Settings as SettingsIcon,
+  X,
   Sparkles,
   Sun,
   SunMoon,
@@ -63,6 +64,14 @@ export function Rail() {
           <span className="brand-name">{t('app.name')}</span>
           <span className="brand-tag truncate">{t('app.tagline')}</span>
         </span>
+        <button
+          type="button"
+          className="btn btn-ghost btn-icon btn-sm mobile-only"
+          onClick={() => setNavOpen(false)}
+          aria-label={t('common.close')}
+        >
+          <X size={18} />
+        </button>
       </div>
 
       <nav className="rail-nav">

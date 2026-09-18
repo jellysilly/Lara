@@ -2,9 +2,16 @@
    Shell: rail + content + optional right panel, collapsing to a tab bar.
 --------------------------------------------------------------------------- */
 
+/*
+ * Layer order is global on purpose: the shell is positioned but deliberately
+ * has no z-index, so it does not open a stacking context. Its fixed children
+ * (the drawer, the side panel) then share one scale with the root-level
+ * overlays: ocean 0 < tab bar 30 < drawer backdrop 40 < panel backdrop 45 <
+ * drawer/panel 50 < modals 60 < toasts 80. Giving .shell a z-index traps the
+ * drawer underneath the backdrop that is supposed to sit behind it.
+ */
 .shell {
   position: relative;
-  z-index: 1;
   display: grid;
   grid-template-columns: var(--rail-width) minmax(0, 1fr);
   height: 100dvh;
@@ -272,6 +279,11 @@
   display: none;
 }
 
+/* Only ever shown as an overlay next to the sliding panel. */
+.panel-backdrop {
+  display: none;
+}
+
 .drawer-backdrop {
   position: fixed;
   inset: 0;
@@ -326,20 +338,17 @@
     bottom: 0;
     width: min(360px, 92vw);
     box-shadow: var(--shadow-lg);
-    background: var(--surface);
+    background: var(--surface-solid);
   }
 
   .panel-backdrop {
+    display: block;
     position: fixed;
     inset: 0;
     z-index: 45;
     background: rgb(6 22 31 / 0.3);
     animation: fade-in var(--duration-fast) var(--ease-out);
   }
-}
-
-.panel-backdrop {
-  display: none;
 }
 
 @media (max-width: 760px) {
@@ -358,7 +367,8 @@
     align-items: stretch;
     padding: var(--space-4) var(--space-3);
     padding-top: calc(var(--space-4) + env(safe-area-inset-top));
-    background: var(--surface);
+    /* Solid over the dimmed backdrop — translucency here just muddies the text. */
+    background: var(--surface-solid);
     box-shadow: var(--shadow-lg);
     animation: slide-in-left var(--duration) var(--ease-out);
   }
@@ -367,10 +377,16 @@
     display: none;
   }
 
-  .rail .brand-text,
-  .rail .nav-item span,
+  .rail .brand-text {
+    display: flex;
+  }
+
+  .rail .nav-item span {
+    display: inline;
+  }
+
   .rail .nav-badge {
-    display: revert;
+    display: inline-block;
   }
 
   .nav-item {
@@ -380,10 +396,6 @@
 
   .content {
     padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
-  }
-
-  .panel {
-    bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
   }
 
   .tabbar {
@@ -469,4 +481,10 @@
   .rail-footer-btn span {
     display: none;
   }
+}
+
+/* The drawer's own close button sits at the end of the brand row. */
+.brand > .btn {
+  margin-left: auto;
+  flex: none;
 }
