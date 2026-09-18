@@ -57,14 +57,28 @@ provider you configure.
 - Pin entries so they survive trimming, disable entries without deleting them,
   and watch the memory budget against the context window
 
+**Your own prompts**
+- Add prompt blocks of your own and switch each one on or off, like SillyTavern's
+  prompt manager
+- Five positions: folded into the system prompt, after the character block,
+  before the history, after the history, or injected N messages from the end
+- Blocks that become their own message choose their role (system, user or
+  assistant); blocks folded into the system message do not need one
+- Scope a block to particular characters, reorder the list, duplicate, and see
+  each block's token cost — the whole set shows up as its own row in the
+  context meter
+- Macros work inside them, same as everywhere else
+
 **Presets**
 - Sampler presets (temperature, top-p/top-k, penalties, response length, stop
   sequences, streaming) with as many profiles as you like
 - Imports SillyTavern presets — both Chat Completion and Text Completion. Chat
-  presets bring their prompt blocks across too: the main prompt and any enabled
-  custom blocks become the system prompt, in the order the preset lists them,
-  and the post-history block lands where it belongs. Applying that text is
-  always a separate yes/no, so an import never quietly overwrites your prompts.
+  presets bring their prompt blocks across as real toggles: the main prompt and
+  the post-history block land in their own fields, and every other block becomes
+  one of your prompts, switched on or off exactly as the preset had it. Their
+  position is read from where they sit around the character and history markers
+  in `prompt_order`, and an in-chat injection keeps its depth. Applying that text
+  is always a separate yes/no, so an import never quietly overwrites your prompts.
 - Instruct and context templates are recognised and rejected with an
   explanation rather than a silent no-op — Lara speaks to chat-completion
   endpoints and builds its own formatting
@@ -239,6 +253,13 @@ SillyTavern: карточки персонажей, персоны, лорбук
 - **Книга памяти:** долговременные заметки в каждом промпте чата, суммаризация
   сцены по кнопке или автоматически каждые N сообщений, закрепление записей,
   бюджет памяти относительно окна контекста.
+- **Свои промпты:** собственные блоки промпта, каждый со своим тогглом — как
+  менеджер промптов в SillyTavern. Пять позиций: внутри системного промпта,
+  после персонажа, перед историей, после истории или на заданной глубине.
+  Блоки, которые становятся отдельным сообщением, выбирают роль (системное,
+  пользователя, ассистента). Блок можно ограничить конкретными персонажами,
+  переставить в списке, продублировать и увидеть его стоимость в токенах —
+  весь набор отдельной строкой в счётчике контекста. Макросы внутри работают.
 - **Пресеты:** наборы сэмплеров (температура, top-p/top-k, штрафы, длина ответа,
   стоп-последовательности, стриминг) — сколько угодно профилей. Импортируются
   пресеты SillyTavern, и Chat Completion, и Text Completion. Chat-пресеты

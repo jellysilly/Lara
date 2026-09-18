@@ -6,6 +6,7 @@ import type {
   Message,
   MessageRole,
   Persona,
+  PromptBlock,
   PromptSection,
   Settings,
 } from '@/types';
@@ -19,7 +20,7 @@ export interface BuildOptions {
   character: Character | null;
   persona: Persona | null;
   lorebooks: Lorebook[];
-  settings: Pick<Settings, 'prompt' | 'language' | 'regexScripts'>;
+  settings: Pick<Settings, 'prompt' | 'language' | 'regexScripts' | 'promptBlocks'>;
   /** Text the user is about to send, so lore can react to it before it exists. */
   pendingUserText?: string;
   /** Ask the model to write the user's next line instead of the character's. */
@@ -57,6 +58,16 @@ export function buildPrompt(options: BuildOptions): BuiltPrompt {
   const { chat, character, persona, lorebooks, settings, pendingUserText = '' } = options;
   const macroContext = { character, persona, locale: settings.language };
   const expand = (text: string) => substituteMacros(text ?? '', macroContext).trim();
+
+  // Custom blocks the user (or an imported preset) added, in list order.
+  const blocks = (settings.promptBlocks ?? []).filter(
+    (block) =>
+      block.enabled &&
+      block.content.trim() &&
+      (!block.characterIds.length || (character && block.characterIds.includes(character.id))),
+  );
+  const blocksAt = (position: PromptBlock['position']) =>
+    blocks.filter((block) => block.position === position);
 
   const scripts = settings.regexScripts ?? [];
   const runRegex = (text: string, target: 'user' | 'assistant' | 'system' | 'worldInfo', depth?: number) =>
@@ -116,11 +127,16 @@ export function buildPrompt(options: BuildOptions): BuiltPrompt {
   const loreBeforeText = loreText(loreBefore);
   const loreAfterText = loreText(loreAfter);
 
+  const systemBlockText = blocksAt('system').map((block) => expand(block.content)).join('\n\n');
+  const afterCharacterText = blocksAt('after_character').map((block) => expand(block.content)).join('\n\n');
+
   const systemContent = joinBlocks([
     systemPrompt,
+    systemBlockText,
     loreBeforeText && `World info:\n${loreBeforeText}`,
     characterBlock,
     personaBlock,
+    afterCharacterText,
     loreAfterText && `World info:\n${loreAfterText}`,
     memoryBlock,
     examplesBlock,
@@ -132,6 +148,13 @@ export function buildPrompt(options: BuildOptions): BuiltPrompt {
   addSection('persona', 'tokens.section.persona', personaBlock);
   addSection('memory', 'tokens.section.memory', memoryBlock);
   addSection('examples', 'tokens.section.examples', examplesBlock);
+  addSection(
+    'blocks',
+    'tokens.section.blocks',
+    [systemBlockText, afterCharacterText, ...blocks
+      .filter((block) => block.position !== 'system' && block.position !== 'after_character')
+      .map((block) => expand(block.content))].join('\n'),
+  );
 
   // ---- author's note + depth lore -----------------------------------------
   const noteParts = [
@@ -145,7 +168,17 @@ export function buildPrompt(options: BuildOptions): BuiltPrompt {
 
   // ---- history -------------------------------------------------------------
   const reserve = settings.prompt.responseTokens;
-  const overheadTokens = estimateTokens(systemContent) + estimateTokens(authorNote) + estimateTokens(depthLore) + 16;
+  const standaloneBlocks = blocks.filter(
+    (block) => block.position !== 'system' && block.position !== 'after_character',
+  );
+  const standaloneText = standaloneBlocks.map((block) => expand(block.content)).join('\n');
+
+  const overheadTokens =
+    estimateTokens(systemContent) +
+    estimateTokens(authorNote) +
+    estimateTokens(depthLore) +
+    estimateTokens(standaloneText) +
+    16;
   const postHistory = expand(
     character?.postHistoryInstructions?.trim()
       ? character.postHistoryInstructions
@@ -168,6 +201,13 @@ export function buildPrompt(options: BuildOptions): BuiltPrompt {
   }
   addSection('history', 'tokens.section.history', history.map((item) => item.content).join('\n'));
 
+  // Depth-positioned blocks go in deepest first, so shallower ones stay nearer
+  // the end once every splice has run.
+  for (const block of [...blocksAt('at_depth')].sort((a, b) => b.depth - a.depth)) {
+    const depth = Math.max(0, Math.min(history.length, block.depth));
+    history.splice(history.length - depth, 0, { role: block.role, content: expand(block.content) });
+  }
+
   // Inject the author's note / depth lore N messages from the end.
   const injections: { role: MessageRole; content: string }[] = [];
   if (authorNote) injections.push({ role: 'system', content: authorNote });
@@ -179,7 +219,13 @@ export function buildPrompt(options: BuildOptions): BuiltPrompt {
 
   const messages: { role: MessageRole; content: string }[] = [];
   if (systemContent) messages.push({ role: 'system', content: systemContent });
+  for (const block of blocksAt('before_history')) {
+    messages.push({ role: block.role, content: expand(block.content) });
+  }
   messages.push(...history);
+  for (const block of blocksAt('after_history')) {
+    messages.push({ role: block.role, content: expand(block.content) });
+  }
 
   if (options.impersonate) {
     const impersonatePrompt = expand(settings.prompt.impersonatePrompt);

@@ -169,6 +169,31 @@ export type ChatStyle = 'flat' | 'bubble';
 export type AvatarMode = 'messenger' | 'above' | 'none';
 export type Language = 'en' | 'ru';
 
+/**
+ * Where a custom prompt block lands. `system` and `after_character` are folded
+ * into the system message; the rest become messages of their own.
+ */
+export type PromptBlockPosition =
+  | 'system'
+  | 'after_character'
+  | 'before_history'
+  | 'after_history'
+  | 'at_depth';
+
+export interface PromptBlock {
+  id: UUID;
+  name: string;
+  content: string;
+  enabled: boolean;
+  position: PromptBlockPosition;
+  /** Only used by the positions that emit a message of their own. */
+  role: MessageRole;
+  /** Messages from the end, for `at_depth`. */
+  depth: number;
+  /** Empty means every character. */
+  characterIds: UUID[];
+}
+
 export type RegexTarget = 'user' | 'assistant' | 'system' | 'worldInfo';
 /** display = what you read, prompt = what the model reads, store = rewritten on save. */
 export type RegexStage = 'display' | 'prompt' | 'store';
@@ -243,6 +268,7 @@ export interface Settings {
   presets: GenerationPreset[];
   activePresetId?: UUID;
   regexScripts: RegexScript[];
+  promptBlocks: PromptBlock[];
   activePersonaId?: UUID;
   corsProxy: string;
   /** Cumulative token counters across the whole app. */

@@ -32,6 +32,7 @@ import { Field, Section, Segmented, Select, Slider, Switch, TextArea, TextInput 
 import { UsageStats } from '@/components/chat/TokenMeter';
 import { AppearanceSettings } from './AppearanceSettings';
 import { RegexSettings } from './RegexSettings';
+import { PromptBlocks } from './PromptBlocks';
 
 const TABS = ['connection', 'generation', 'prompts', 'regex', 'appearance', 'data', 'about'] as const;
 type Tab = (typeof TABS)[number];
@@ -253,6 +254,7 @@ function GenerationTab() {
   const upsertPreset = useSettings((state) => state.upsertPreset);
   const removePreset = useSettings((state) => state.removePreset);
   const patchPrompt = useSettings((state) => state.patchPrompt);
+  const addPromptBlocks = useSettings((state) => state.addPromptBlocks);
   const patch = useSettings((state) => state.patch);
   const toast = useUi((state) => state.toast);
   const askConfirm = useUi((state) => state.askConfirm);
@@ -285,8 +287,14 @@ function GenerationTab() {
     const promptFields = Object.keys(imported.prompt).filter(
       (key) => key !== 'contextSize' && key !== 'responseTokens',
     );
-    if (promptFields.length && (await askConfirm(t('settings.gen.applyPrompts')))) {
+    const carriesText = promptFields.length > 0 || imported.blocks.length > 0;
+
+    if (carriesText && (await askConfirm(t('settings.gen.applyPrompts')))) {
       patchPrompt(imported.prompt);
+      if (imported.blocks.length) {
+        addPromptBlocks(imported.blocks);
+        toast(t('blocks.imported', { count: imported.blocks.length }), 'success');
+      }
     } else if (imported.prompt.contextSize || imported.prompt.responseTokens) {
       // Sizes are settings, not writing — they come along either way.
       patchPrompt({
@@ -495,6 +503,8 @@ function PromptsTab() {
           <TextArea value={prompt.summaryPrompt} onChange={(event) => patchPrompt({ summaryPrompt: event.target.value })} />
         </Field>
       </Section>
+
+      <PromptBlocks />
 
       <Section title={t('tokens.context')}>
         <Slider

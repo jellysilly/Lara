@@ -202,6 +202,37 @@ export function Segmented<T extends string>({
   );
 }
 
+/**
+ * A switch that is a button, not a label-wrapped checkbox — so it can live
+ * inside a <summary> without also toggling the disclosure.
+ */
+export function ToggleButton({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (value: boolean) => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      title={label}
+      className="switch-track switch-button"
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onChange(!checked);
+      }}
+      data-on={checked ? 'true' : 'false'}
+    />
+  );
+}
+
 export function Spinner() {
   return <span className="spinner" aria-hidden />;
 }

@@ -25,6 +25,7 @@ export function useBuiltPrompt(): BuiltPrompt | null {
   const promptSettings = useSettings((state) => state.prompt);
   const language = useSettings((state) => state.language);
   const regexScripts = useSettings((state) => state.regexScripts);
+  const promptBlocks = useSettings((state) => state.promptBlocks);
   const activePersonaId = useSettings((state) => state.activePersonaId);
   const draft = useDraft((state) => state.draft);
   const deferredDraft = useDeferredValue(draft);
@@ -38,7 +39,7 @@ export function useBuiltPrompt(): BuiltPrompt | null {
       character,
       persona,
       lorebooks,
-      settings: { prompt: promptSettings, language, regexScripts },
+      settings: { prompt: promptSettings, language, regexScripts, promptBlocks },
       pendingUserText: deferredDraft,
     });
   }, [
@@ -49,6 +50,7 @@ export function useBuiltPrompt(): BuiltPrompt | null {
     promptSettings,
     language,
     regexScripts,
+    promptBlocks,
     activePersonaId,
     deferredDraft,
   ]);

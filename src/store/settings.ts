@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ApiProfile, GenerationPreset, RegexScript, Settings, TokenUsage } from '@/types';
+import type { ApiProfile, GenerationPreset, PromptBlock, RegexScript, Settings, TokenUsage } from '@/types';
 import { db } from '@/lib/db';
 import { uid, debounce } from '@/lib/utils';
 import {
@@ -82,6 +82,7 @@ export const defaultSettings: Settings = {
   presets: [defaultPreset],
   activePresetId: defaultPreset.id,
   regexScripts: [],
+  promptBlocks: [],
   activePersonaId: undefined,
   corsProxy: import.meta.env.VITE_CORS_PROXY ?? '',
   totalUsage: { prompt: 0, completion: 0 },
@@ -104,6 +105,9 @@ interface SettingsState extends Settings {
   upsertRegexScript(script: RegexScript): void;
   removeRegexScript(id: string): void;
   addRegexScripts(scripts: RegexScript[]): void;
+  upsertPromptBlock(block: PromptBlock): void;
+  removePromptBlock(id: string): void;
+  addPromptBlocks(blocks: PromptBlock[]): void;
   addUsage(usage: TokenUsage): void;
   resetUsage(): void;
   replaceAll(settings: Settings): void;
@@ -120,6 +124,7 @@ function merge(base: Settings, stored: Partial<Settings>): Settings {
     presets: stored.presets?.length ? stored.presets : base.presets,
     apiProfiles: stored.apiProfiles ?? base.apiProfiles,
     regexScripts: stored.regexScripts ?? base.regexScripts,
+    promptBlocks: stored.promptBlocks ?? base.promptBlocks,
   };
 }
 
@@ -210,6 +215,20 @@ export const useSettings = create<SettingsState>((set, get) => {
     },
     addRegexScripts(scripts) {
       update((state) => ({ regexScripts: [...state.regexScripts, ...scripts] }));
+    },
+
+    upsertPromptBlock(block) {
+      update((state) => ({
+        promptBlocks: state.promptBlocks.some((item) => item.id === block.id)
+          ? state.promptBlocks.map((item) => (item.id === block.id ? block : item))
+          : [...state.promptBlocks, block],
+      }));
+    },
+    removePromptBlock(id) {
+      update((state) => ({ promptBlocks: state.promptBlocks.filter((item) => item.id !== id) }));
+    },
+    addPromptBlocks(blocks) {
+      update((state) => ({ promptBlocks: [...state.promptBlocks, ...blocks] }));
     },
 
     addUsage(usage) {

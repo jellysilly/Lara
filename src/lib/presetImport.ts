@@ -1,4 +1,4 @@
-import type { GenerationPreset, PromptSettings } from '@/types';
+import type { GenerationPreset, MessageRole, PromptBlock, PromptBlockPosition, PromptSettings } from '@/types';
 import { uid } from './utils';
 
 export type PresetKind = 'chat' | 'text' | 'lara';
@@ -14,6 +14,8 @@ export interface ImportedPreset {
   preset: GenerationPreset;
   /** Prompt fields the file carried, if any — applying them is the caller's call. */
   prompt: Partial<PromptSettings>;
+  /** The preset's own prompt blocks, as toggles. */
+  blocks: PromptBlock[];
   model?: string;
   kind: PresetKind;
   /** Sampler names the file sets that Lara has no equivalent for. */
@@ -120,11 +122,22 @@ interface StPrompt {
   identifier?: string;
   name?: string;
   content?: string;
+  role?: string;
   /** Placeholders SillyTavern fills in itself — Lara assembles those already. */
   marker?: boolean;
   system_prompt?: boolean;
   injection_position?: number;
+  injection_depth?: number;
 }
+
+/** Markers that mean everything after them sits past the character block. */
+const CHARACTER_MARKERS = new Set([
+  'charDescription',
+  'charPersonality',
+  'scenario',
+  'personaDescription',
+  'dialogueExamples',
+]);
 
 interface StPromptOrder {
   character_id?: number;
@@ -163,26 +176,54 @@ function readChatPreset(raw: Raw, name: string): ImportedPreset {
         .filter((prompt): prompt is StPrompt => Boolean(prompt))
     : prompts;
 
-  const systemBlocks: string[] = [];
+  let main = '';
   let jailbreak = '';
+  const blocks: PromptBlock[] = [];
+
+  // Markers stand in for the character card, history and world info, which Lara
+  // assembles itself — but their place in the order still says where the
+  // blocks around them belong.
+  let stage: PromptBlockPosition = 'system';
 
   for (const prompt of sequence) {
-    // Markers stand in for the character card, history and world info, all of
-    // which Lara builds itself.
-    if (prompt.marker) continue;
+    if (prompt.marker || !prompt.content) {
+      if (prompt.identifier && CHARACTER_MARKERS.has(prompt.identifier) && stage === 'system') {
+        stage = 'after_character';
+      } else if (prompt.identifier === 'chatHistory') {
+        stage = 'after_history';
+      }
+      continue;
+    }
+
     const content = text(prompt.content);
     if (!content) continue;
-    if (prompt.identifier && enabled.get(prompt.identifier) === false) continue;
 
+    if (prompt.identifier === 'main') {
+      main = content;
+      continue;
+    }
     if (prompt.identifier === 'jailbreak') {
       jailbreak = content;
       continue;
     }
-    systemBlocks.push(content);
+
+    const role: MessageRole =
+      prompt.role === 'user' || prompt.role === 'assistant' ? prompt.role : 'system';
+
+    blocks.push({
+      id: uid(),
+      name: prompt.name || prompt.identifier || 'Prompt',
+      content,
+      enabled: prompt.identifier ? enabled.get(prompt.identifier) !== false : true,
+      position: prompt.injection_position === 1 ? 'at_depth' : stage,
+      role,
+      depth: number(prompt.injection_depth) ?? 4,
+      characterIds: [],
+    });
   }
 
   const prompt: Partial<PromptSettings> = {};
-  if (systemBlocks.length) prompt.systemPrompt = systemBlocks.join('\n\n');
+  if (main) prompt.systemPrompt = main;
   if (jailbreak) prompt.postHistoryInstructions = jailbreak;
   const impersonation = text(raw.impersonation_prompt);
   if (impersonation) prompt.impersonatePrompt = impersonation;
@@ -193,6 +234,7 @@ function readChatPreset(raw: Raw, name: string): ImportedPreset {
   return {
     preset,
     prompt,
+    blocks,
     model: text(raw.openai_model) ?? text(raw.claude_model) ?? text(raw.custom_model),
     kind: 'chat',
     unsupported: collectUnsupported(raw),
@@ -226,7 +268,7 @@ function readTextPreset(raw: Raw, name: string): ImportedPreset {
   if (context) prompt.contextSize = context;
   if (preset.maxTokens) prompt.responseTokens = preset.maxTokens;
 
-  return { preset, prompt, kind: 'text', unsupported: collectUnsupported(raw) };
+  return { preset, prompt, blocks: [], kind: 'text', unsupported: collectUnsupported(raw) };
 }
 
 // ---------------------------------------------------------------------------
@@ -241,7 +283,7 @@ function readLaraPreset(raw: Raw, name: string): ImportedPreset {
   preset.frequencyPenalty = number(raw.frequencyPenalty) ?? preset.frequencyPenalty;
   preset.stop = list(raw.stop) ?? [];
   preset.streaming = typeof raw.streaming === 'boolean' ? raw.streaming : preset.streaming;
-  return { preset, prompt: {}, kind: 'lara', unsupported: [] };
+  return { preset, prompt: {}, blocks: [], kind: 'lara', unsupported: [] };
 }
 
 /**

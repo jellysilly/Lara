@@ -979,3 +979,27 @@ button:hover > .avatar-edit {
   max-height: 260px;
   overflow-y: auto;
 }
+
+/* A standalone switch, for places a label cannot wrap the control. */
+.switch-button {
+  flex: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.switch-button[data-on='true'] {
+  background: linear-gradient(140deg, var(--brand-1), var(--brand-2));
+  border-color: transparent;
+}
+
+.switch-button[data-on='true']::after {
+  transform: translateX(18px);
+}
+
+.switch-button:focus-visible {
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.collapsible[data-off='true'] > summary {
+  opacity: 0.55;
+}
