@@ -30,8 +30,9 @@ import { TopBar } from '@/components/layout/TopBar';
 import { Field, Section, Segmented, Select, Slider, Switch, TextArea, TextInput } from '@/components/ui/Primitives';
 import { UsageStats } from '@/components/chat/TokenMeter';
 import { AppearanceSettings } from './AppearanceSettings';
+import { RegexSettings } from './RegexSettings';
 
-const TABS = ['connection', 'generation', 'prompts', 'appearance', 'data', 'about'] as const;
+const TABS = ['connection', 'generation', 'prompts', 'regex', 'appearance', 'data', 'about'] as const;
 type Tab = (typeof TABS)[number];
 
 function ConnectionTab() {
@@ -604,6 +605,7 @@ export function SettingsPage() {
           {tab === 'connection' && <ConnectionTab />}
           {tab === 'generation' && <GenerationTab />}
           {tab === 'prompts' && <PromptsTab />}
+          {tab === 'regex' && <RegexSettings />}
           {tab === 'appearance' && <AppearanceSettings />}
           {tab === 'data' && <DataTab />}
           {tab === 'about' && (

@@ -169,6 +169,29 @@ export type ChatStyle = 'flat' | 'bubble';
 export type AvatarMode = 'messenger' | 'above' | 'none';
 export type Language = 'en' | 'ru';
 
+export type RegexTarget = 'user' | 'assistant' | 'system' | 'worldInfo';
+/** display = what you read, prompt = what the model reads, store = rewritten on save. */
+export type RegexStage = 'display' | 'prompt' | 'store';
+
+export interface RegexScript {
+  id: UUID;
+  name: string;
+  enabled: boolean;
+  /** A bare pattern or the `/pattern/flags` form. */
+  find: string;
+  replace: string;
+  /** Substrings stripped out of the match before it is substituted back. */
+  trimStrings: string[];
+  targets: RegexTarget[];
+  stages: RegexStage[];
+  /** Depth window, counted from the newest message (0). Null means unbounded. */
+  minDepth: number | null;
+  maxDepth: number | null;
+  runOnEdit: boolean;
+  /** Empty means every character. */
+  characterIds: UUID[];
+}
+
 export interface AppearanceSettings {
   theme: ThemeName;
   mode: ColorMode;
@@ -219,6 +242,7 @@ export interface Settings {
   activeApiProfileId?: UUID;
   presets: GenerationPreset[];
   activePresetId?: UUID;
+  regexScripts: RegexScript[];
   activePersonaId?: UUID;
   corsProxy: string;
   /** Cumulative token counters across the whole app. */

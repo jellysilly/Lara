@@ -6,6 +6,7 @@ import { buildPrompt } from '@/lib/prompt';
 import { complete, ApiError } from '@/lib/api';
 import { calibrate, estimateTokens } from '@/lib/tokenizer';
 import { substituteMacros } from '@/lib/macros';
+import { applyRegexScripts } from '@/lib/regex';
 import { activePreset, activeProfile, useSettings } from './settings';
 import { useLibrary } from './library';
 
@@ -210,14 +211,24 @@ export const useChats = create<ChatState>((set, get) => {
 
     async send(text) {
       const trimmed = text.trim();
-      const { chat, persona, settings } = context();
+      const { chat, character, persona, settings } = context();
       if (!chat || !trimmed) return;
+
+      // Store-stage scripts rewrite what actually gets saved to the transcript.
+      const stored = applyRegexScripts(trimmed, settings.regexScripts, {
+        target: 'user',
+        stage: 'store',
+        depth: 0,
+        characterId: chat.characterId,
+        macros: { character, persona, locale: settings.language },
+      });
+
       const name = persona?.name || 'You';
       mutate((current) => ({
         ...current,
         messages: [
           ...current.messages,
-          createMessage({ role: 'user', name, avatar: persona?.avatar, swipes: [trimmed] }),
+          createMessage({ role: 'user', name, avatar: persona?.avatar, swipes: [stored || trimmed] }),
         ],
       }));
       await get().generate();
@@ -333,7 +344,14 @@ export const useChats = create<ChatState>((set, get) => {
         });
 
         const finalText = (result.text ? baseText + result.text : streamed).trim();
-        const cleaned = settings.prompt.trimSentences && finalText ? trimToSentence(finalText) : finalText;
+        const trimmed = settings.prompt.trimSentences && finalText ? trimToSentence(finalText) : finalText;
+        const cleaned = applyRegexScripts(trimmed, settings.regexScripts, {
+          target: options.impersonate ? 'user' : 'assistant',
+          stage: 'store',
+          depth: 0,
+          characterId: chat.characterId,
+          macros: { character, persona, locale: settings.language },
+        });
 
         if (options.impersonate) {
           impersonateListeners.forEach((listener) => listener(cleaned));
@@ -418,13 +436,33 @@ export const useChats = create<ChatState>((set, get) => {
     },
 
     editMessage(messageId, text) {
-      mutate((chat) => ({
-        ...chat,
-        messages: chat.messages.map((message) =>
+      const { chat, character, persona, settings } = context();
+      if (!chat) return;
+      const index = chat.messages.findIndex((message) => message.id === messageId);
+      const target = chat.messages[index];
+      if (!target) return;
+
+      const edited = applyRegexScripts(
+        text,
+        settings.regexScripts.filter((script) => script.runOnEdit),
+        {
+          target: target.role,
+          stage: 'store',
+          depth: chat.messages.length - 1 - index,
+          characterId: chat.characterId,
+          macros: { character, persona, locale: settings.language },
+        },
+      );
+
+      mutate((current) => ({
+        ...current,
+        messages: current.messages.map((message) =>
           message.id === messageId
             ? {
                 ...message,
-                swipes: message.swipes.map((swipe, index) => (index === message.swipeIndex ? text : swipe)),
+                swipes: message.swipes.map((swipe, position) =>
+                  position === message.swipeIndex ? edited : swipe,
+                ),
                 updatedAt: Date.now(),
               }
             : message,

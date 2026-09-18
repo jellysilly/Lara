@@ -182,6 +182,7 @@ export function ChatView() {
                 key={message.id}
                 message={message}
                 isLast={index === messageCount - 1}
+                depth={messageCount - 1 - index}
                 streaming={streamingId === message.id}
               />
             ))}

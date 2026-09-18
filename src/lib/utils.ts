@@ -117,6 +117,36 @@ export async function resizeImage(file: File | Blob, max = 512): Promise<string>
   return canvas.toDataURL('image/webp', 0.86);
 }
 
+/**
+ * Clipboard write that also works over plain http on a LAN — the async
+ * Clipboard API is gated on a secure context, localhost aside.
+ */
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    /* fall through to the legacy path */
+  }
+
+  try {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    const copied = document.execCommand('copy');
+    area.remove();
+    return copied;
+  } catch {
+    return false;
+  }
+}
+
 export function debounce<T extends (...args: never[]) => void>(fn: T, wait: number): T & { cancel(): void } {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const wrapped = ((...args: Parameters<T>) => {

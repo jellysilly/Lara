@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ApiProfile, GenerationPreset, Settings, TokenUsage } from '@/types';
+import type { ApiProfile, GenerationPreset, RegexScript, Settings, TokenUsage } from '@/types';
 import { db } from '@/lib/db';
 import { uid, debounce } from '@/lib/utils';
 import {
@@ -81,6 +81,7 @@ export const defaultSettings: Settings = {
   activeApiProfileId: undefined,
   presets: [defaultPreset],
   activePresetId: defaultPreset.id,
+  regexScripts: [],
   activePersonaId: undefined,
   corsProxy: import.meta.env.VITE_CORS_PROXY ?? '',
   totalUsage: { prompt: 0, completion: 0 },
@@ -100,6 +101,9 @@ interface SettingsState extends Settings {
   removeProfile(id: string): void;
   upsertPreset(preset: GenerationPreset): void;
   removePreset(id: string): void;
+  upsertRegexScript(script: RegexScript): void;
+  removeRegexScript(id: string): void;
+  addRegexScripts(scripts: RegexScript[]): void;
   addUsage(usage: TokenUsage): void;
   resetUsage(): void;
   replaceAll(settings: Settings): void;
@@ -115,6 +119,7 @@ function merge(base: Settings, stored: Partial<Settings>): Settings {
     totalUsage: { ...base.totalUsage, ...stored.totalUsage },
     presets: stored.presets?.length ? stored.presets : base.presets,
     apiProfiles: stored.apiProfiles ?? base.apiProfiles,
+    regexScripts: stored.regexScripts ?? base.regexScripts,
   };
 }
 
@@ -191,6 +196,20 @@ export const useSettings = create<SettingsState>((set, get) => {
         const presets = state.presets.filter((item) => item.id !== id);
         return { presets, activePresetId: state.activePresetId === id ? presets[0]?.id : state.activePresetId };
       });
+    },
+
+    upsertRegexScript(script) {
+      update((state) => ({
+        regexScripts: state.regexScripts.some((item) => item.id === script.id)
+          ? state.regexScripts.map((item) => (item.id === script.id ? script : item))
+          : [...state.regexScripts, script],
+      }));
+    },
+    removeRegexScript(id) {
+      update((state) => ({ regexScripts: state.regexScripts.filter((item) => item.id !== id) }));
+    },
+    addRegexScripts(scripts) {
+      update((state) => ({ regexScripts: [...state.regexScripts, ...scripts] }));
     },
 
     addUsage(usage) {

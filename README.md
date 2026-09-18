@@ -57,6 +57,18 @@ provider you configure.
 - Pin entries so they survive trimming, disable entries without deleting them,
   and watch the memory budget against the context window
 
+**Regex scripts**
+- Find-and-replace rules that run over messages, with `/pattern/flags` or a bare pattern
+- Three independent stages: what **you read**, what the **model reads**, and what
+  gets **saved** — so you can hide reasoning blocks from the transcript without
+  destroying them, or strip them from the prompt without touching the display
+- Scoped by message kind (your messages, model replies, system messages, world
+  info), by depth window, and by character
+- `$1`…`$9`, `{{match}}` and the usual `{{char}}`/`{{user}}` macros in the
+  replacement, plus trim-out strings
+- Reorderable — they run top to bottom — with a live tester in the settings
+- Imports SillyTavern regex scripts as well as Lara's own export
+
 **Look and feel**
 - Three built-in ocean themes — Lagoon, Seafoam, Coral — each with a light and a
   deep-water dark variant, plus a system-follows mode
@@ -77,8 +89,43 @@ npm run build    # static bundle in dist/
 npm run preview  # serve the build
 ```
 
-`dist/` is a plain static site — any static host or `npx serve dist` will do.
-The build uses relative asset paths, so serving it from a subdirectory works.
+`dist/` is a plain static site. `npm run serve` starts a dependency-free static
+server (`scripts/serve.mjs`) on <http://localhost:8080>; `PORT` and `HOST`
+override the defaults, and `HOST=0.0.0.0` makes it reachable from other devices
+on your network. Any other static host works too — the build uses relative asset
+paths, so serving it from a subdirectory is fine.
+
+## Running on Android (Termux)
+
+Lara is a static site, so a phone can host it for itself. In [Termux](https://termux.dev):
+
+```bash
+pkg install -y git nodejs-lts
+git clone https://github.com/jellysilly/Lara
+cd Lara
+npm run termux
+```
+
+That installs dependencies, builds, and serves on <http://localhost:8080> — open
+it in the phone's browser. The script also takes a wake lock so Android does not
+suspend the server mid-scene.
+
+```bash
+bash scripts/termux.sh --serve   # skip install and build, just serve
+bash scripts/termux.sh --lan     # also reachable from your local network
+PORT=3000 bash scripts/termux.sh # different port
+```
+
+Notes:
+
+- Node 20 or newer is required. `pkg install nodejs-lts` gives you a recent one.
+- The first `npm install` and build take a few minutes on a phone. If the build
+  runs out of memory, build on a computer and copy the `dist/` folder over —
+  `npm run serve` only needs `dist/` and `scripts/serve.mjs`.
+- `http://localhost` counts as a secure context, so storage and clipboard behave
+  normally. Over `--lan` the clipboard falls back to a legacy copy path.
+- Everything still stays on the device; the only outbound traffic is to whatever
+  model endpoint you configure.
 
 ## Connecting a model
 
@@ -118,19 +165,23 @@ clears IndexedDB and reloads.
 
 ```
 src/
-  lib/          prompt builder, lorebook engine, tokenizer, API clients,
-                character-card PNG codec, wiki fetcher, generator, markdown
+  lib/          prompt builder, lorebook engine, regex engine, tokenizer,
+                API clients, character-card PNG codec, wiki fetcher,
+                generator, markdown
   store/        zustand stores: settings, library, chats, ui
   components/   layout, chat, characters, personas, lorebook, memory,
                 generator, settings, ui primitives
   styles/       base, themes (3 palettes x light/dark), layout, components, chat
   i18n/         en + ru dictionaries with plural support
+scripts/
+  serve.mjs     dependency-free static server for dist/
+  termux.sh     one-shot Android setup: install, build, serve
 ```
 
 ## Not included yet
 
-Group chats, extension/plugin APIs, TTS and image generation, regex-based
-message post-processing, and Text Completion (non-chat) endpoints.
+Group chats, extension/plugin APIs, TTS and image generation, and Text
+Completion (non-chat) endpoints.
 
 ---
 
@@ -170,6 +221,14 @@ SillyTavern: карточки персонажей, персоны, лорбук
 - **Книга памяти:** долговременные заметки в каждом промпте чата, суммаризация
   сцены по кнопке или автоматически каждые N сообщений, закрепление записей,
   бюджет памяти относительно окна контекста.
+- **Регексы:** правила поиска и замены по сообщениям — `/шаблон/флаги` или
+  просто шаблон. Три независимых этапа: что **видите вы**, что **видит модель**
+  и что **сохраняется**, так что блок размышлений можно спрятать из чата, не
+  стирая его, или убрать из промпта, не трогая отображение. Область действия
+  задаётся типом сообщения (ваши, ответы модели, системные, лорбуки), диапазоном
+  глубины и списком персонажей. В замене работают `$1`…`$9`, `{{match}}`,
+  `{{char}}`, `{{user}}` и вырезаемые подстроки. Порядок скриптов меняется, есть
+  живая проверка. Импортируются скрипты SillyTavern.
 - **Оформление:** три морские темы — «Лагуна», «Пена», «Коралл» — каждая со
   светлым и глубоководным тёмным вариантом; два стиля чата (плоский и пузыри);
   три режима аватаров (мессенджер, над сообщением, без аватаров) с настройкой
@@ -184,6 +243,33 @@ npm install
 npm run dev      # http://localhost:5173
 npm run build    # статическая сборка в dist/
 ```
+
+### Запуск на Android (Termux)
+
+Lara — статический сайт, так что телефон может раздавать её сам себе.
+В [Termux](https://termux.dev):
+
+```bash
+pkg install -y git nodejs-lts
+git clone https://github.com/jellysilly/Lara
+cd Lara
+npm run termux
+```
+
+Скрипт поставит зависимости, соберёт проект и поднимет сервер на
+<http://localhost:8080> — откройте адрес в браузере телефона. Заодно берётся
+wake lock, чтобы Android не усыпил сервер посреди сцены.
+
+```bash
+bash scripts/termux.sh --serve   # только раздать уже собранное
+bash scripts/termux.sh --lan     # доступ с других устройств в сети
+PORT=3000 bash scripts/termux.sh # другой порт
+```
+
+Нужен Node 20 или новее (`pkg install nodejs-lts`). Первая установка и сборка на
+телефоне занимают несколько минут; если не хватает памяти — соберите на
+компьютере и скопируйте папку `dist/`, для раздачи нужны только она и
+`scripts/serve.mjs`.
 
 ### Подключение модели
 
@@ -200,5 +286,5 @@ KoboldCpp или `OLLAMA_ORIGINS=*` у Ollama.
 
 ### Чего пока нет
 
-Групповые чаты, API расширений, TTS и генерация изображений, обработка
-сообщений регулярными выражениями, Text Completion эндпоинты.
+Групповые чаты, API расширений, TTS и генерация изображений, Text Completion
+эндпоинты.

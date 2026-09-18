@@ -11,6 +11,7 @@ import type {
 } from '@/types';
 import { activateLore } from './lorebook';
 import { substituteMacros } from './macros';
+import { applyRegexScripts } from './regex';
 import { estimateTokens } from './tokenizer';
 
 export interface BuildOptions {
@@ -18,7 +19,7 @@ export interface BuildOptions {
   character: Character | null;
   persona: Persona | null;
   lorebooks: Lorebook[];
-  settings: Pick<Settings, 'prompt' | 'language'>;
+  settings: Pick<Settings, 'prompt' | 'language' | 'regexScripts'>;
   /** Text the user is about to send, so lore can react to it before it exists. */
   pendingUserText?: string;
   /** Ask the model to write the user's next line instead of the character's. */
@@ -56,6 +57,16 @@ export function buildPrompt(options: BuildOptions): BuiltPrompt {
   const { chat, character, persona, lorebooks, settings, pendingUserText = '' } = options;
   const macroContext = { character, persona, locale: settings.language };
   const expand = (text: string) => substituteMacros(text ?? '', macroContext).trim();
+
+  const scripts = settings.regexScripts ?? [];
+  const runRegex = (text: string, target: 'user' | 'assistant' | 'system' | 'worldInfo', depth?: number) =>
+    applyRegexScripts(text, scripts, {
+      target,
+      stage: 'prompt',
+      depth,
+      characterId: character?.id,
+      macros: macroContext,
+    });
 
   const sections: PromptSection[] = [];
   const addSection = (id: string, label: string, text: string) => {
@@ -100,7 +111,8 @@ export function buildPrompt(options: BuildOptions): BuiltPrompt {
   const memoryText = selectMemory(chat, memoryBudget);
   const memoryBlock = memoryText ? `Persistent memory of this story:\n${expand(memoryText)}` : '';
 
-  const loreText = (items: typeof activated) => items.map((item) => expand(item.entry.content)).join('\n');
+  const loreText = (items: typeof activated) =>
+    items.map((item) => runRegex(expand(item.entry.content), 'worldInfo')).join('\n');
   const loreBeforeText = loreText(loreBefore);
   const loreAfterText = loreText(loreAfter);
 
@@ -146,7 +158,9 @@ export function buildPrompt(options: BuildOptions): BuiltPrompt {
   const history: { role: MessageRole; content: string }[] = [];
   for (let i = usable.length - 1; i >= 0; i--) {
     const message = usable[i];
-    const content = expand(message.swipes[message.swipeIndex] ?? '');
+    const depth = usable.length - 1 - i;
+    const content = runRegex(expand(message.swipes[message.swipeIndex] ?? ''), roleOf(message), depth);
+    if (!content) continue;
     const cost = estimateTokens(content) + 4;
     if (cost > remaining) break;
     remaining -= cost;

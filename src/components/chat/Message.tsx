@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   ChevronLeft,
@@ -14,10 +14,12 @@ import {
 } from 'lucide-react';
 import type { Message as MessageModel } from '@/types';
 import { renderMarkdown } from '@/lib/markdown';
-import { formatTime, formatNumber } from '@/lib/utils';
+import { applyRegexScripts } from '@/lib/regex';
+import { copyText, formatTime, formatNumber } from '@/lib/utils';
 import { useT, useLocale } from '@/lib/useT';
 import { useSettings } from '@/store/settings';
 import { useChats, messageText } from '@/store/chats';
+import { useLibrary } from '@/store/library';
 import { useUi } from '@/store/ui';
 import { Avatar } from '@/components/ui/Avatar';
 
@@ -25,6 +27,8 @@ interface MessageProps {
   message: MessageModel;
   isLast: boolean;
   streaming: boolean;
+  /** Distance from the newest message, so depth-scoped regex scripts can match. */
+  depth: number;
 }
 
 function Typing() {
@@ -37,10 +41,13 @@ function Typing() {
   );
 }
 
-export const MessageBubble = memo(function MessageBubble({ message, isLast, streaming }: MessageProps) {
+export const MessageBubble = memo(function MessageBubble({ message, isLast, streaming, depth }: MessageProps) {
   const t = useT();
   const locale = useLocale();
   const avatarSize = useSettings((state) => state.appearance.avatarSize);
+  const regexScripts = useSettings((state) => state.regexScripts);
+  const characterId = useChats((state) => state.chat?.characterId);
+  const character = useLibrary((state) => state.characters.find((item) => item.id === characterId));
   const generating = useChats((state) => state.generating);
   const { editMessage, deleteMessage, toggleHidden, swipe, branchFrom, generate } = useChats.getState();
   const toast = useUi((state) => state.toast);
@@ -52,6 +59,20 @@ export const MessageBubble = memo(function MessageBubble({ message, isLast, stre
   const editorRef = useRef<HTMLTextAreaElement>(null);
 
   const text = messageText(message);
+
+  // The transcript shows the rewritten text; edits still work on the original.
+  const displayText = useMemo(
+    () =>
+      applyRegexScripts(text, regexScripts, {
+        target: message.role,
+        stage: 'display',
+        depth,
+        characterId,
+        macros: { character },
+      }),
+    [text, regexScripts, message.role, depth, characterId, character],
+  );
+
   const canSwipe = message.role === 'assistant' && (message.swipes.length > 1 || (isLast && !message.isGreeting));
 
   useEffect(() => {
@@ -72,12 +93,8 @@ export const MessageBubble = memo(function MessageBubble({ message, isLast, stre
   };
 
   const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast(t('toast.copied'), 'success');
-    } catch {
-      toast(t('toast.error'), 'error');
-    }
+    const copied = await copyText(displayText);
+    toast(copied ? t('toast.copied') : t('toast.error'), copied ? 'success' : 'error');
   };
 
   const remove = async () => {
@@ -131,9 +148,9 @@ export const MessageBubble = memo(function MessageBubble({ message, isLast, stre
               if (window.matchMedia('(pointer: coarse)').matches) setRevealed((value) => !value);
             }}
           >
-            {text ? (
+            {displayText ? (
               <>
-                <span dangerouslySetInnerHTML={{ __html: renderMarkdown(text) }} />
+                <span dangerouslySetInnerHTML={{ __html: renderMarkdown(displayText) }} />
                 {streaming && <span className="caret" />}
               </>
             ) : streaming ? (

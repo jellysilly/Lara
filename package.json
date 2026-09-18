@@ -8,6 +8,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "serve": "node scripts/serve.mjs",
+    "termux": "bash scripts/termux.sh",
     "typecheck": "tsc -b --noEmit false --emitDeclarationOnly false --pretty"
   },
   "dependencies": {
@@ -26,5 +28,8 @@
     "@vitejs/plugin-react": "^5.1.0",
     "typescript": "^5.9.3",
     "vite": "^7.1.12"
+  },
+  "engines": {
+    "node": ">=20.19"
   }
 }
